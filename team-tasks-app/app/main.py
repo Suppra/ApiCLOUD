@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from routes import auth
+from app.routes import auth
 
 
 app = FastAPI(title="Team Tasks App")
