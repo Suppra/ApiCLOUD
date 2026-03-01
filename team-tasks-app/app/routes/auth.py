@@ -5,6 +5,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.db import get_session
+from app import db_models
+from app.utils.security import verify_password
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -20,17 +26,16 @@ class TokenResponse(BaseModel):
 	token_type: str = "bearer"
 
 
-# Replace with real user storage; for now a single test user.
-FAKE_USER_DB = {"user@example.com": "secret"}
+# Token store: token -> email
 
 # In-memory token store: token -> email
 TOKEN_STORE: dict[str, str] = {}
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest) -> TokenResponse:
-	expected_password = FAKE_USER_DB.get(payload.email)
-	if expected_password is None or payload.password != expected_password:
+def login(payload: LoginRequest, session: Session = Depends(get_session)) -> TokenResponse:
+	user = session.scalar(select(db_models.User).where(db_models.User.email == payload.email))
+	if not user or not verify_password(payload.password, user.password_hash):
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
 	token = secrets.token_hex(16)

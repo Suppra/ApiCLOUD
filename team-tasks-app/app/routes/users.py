@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from app import db_models
 from app.db import get_session
 from app.models import User, UserCreate
+from app.utils.security import hash_password
+from app.db import get_session
+from app import db_models
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -18,12 +21,14 @@ def create_user(user: UserCreate, session: Session = Depends(get_session)):
     existing = session.scalar(select(db_models.User).where(db_models.User.email == user.email))
     if existing:
         raise HTTPException(status_code=400, detail="El email ya existe")
+    password_hash = hash_password(user.password)
 
     db_user = db_models.User(
         name=user.name,
         email=user.email,
         is_active=user.is_active,
         created_at=datetime.utcnow(),
+        password_hash=password_hash,
     )
     session.add(db_user)
     session.commit()
