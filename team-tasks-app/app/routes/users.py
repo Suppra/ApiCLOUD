@@ -1,46 +1,45 @@
-from fastapi import APIRouter, HTTPException, status
-from app.models import User, UserCreate
-from typing import List
 from datetime import datetime
+from typing import List
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-# In-memory storage (simple demo). Each item is a `User` dict-like object.
-users_db: List[User] = []
-_next_id = 1
+from app import db_models
+from app.db import get_session
+from app.models import User, UserCreate
+
+
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: UserCreate):
-    global _next_id
-    # check email uniqueness
-    for existing in users_db:
-        if existing.email == user.email:
-            raise HTTPException(status_code=400, detail="El email ya existe")
+def create_user(user: UserCreate, session: Session = Depends(get_session)):
+    existing = session.scalar(select(db_models.User).where(db_models.User.email == user.email))
+    if existing:
+        raise HTTPException(status_code=400, detail="El email ya existe")
 
-    created = User(
-        id=_next_id,
+    db_user = db_models.User(
         name=user.name,
         email=user.email,
         is_active=user.is_active,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
-    users_db.append(created)
-    _next_id += 1
-    return created
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
 
 
 @router.get("/", response_model=List[User])
-def list_users():
-    return users_db
+def list_users(session: Session = Depends(get_session)):
+    result = session.scalars(select(db_models.User).order_by(db_models.User.id)).all()
+    return result
 
 
 @router.get("/{user_id}", response_model=User)
-def get_user(user_id: int):
-    for user in users_db:
-        if user.id == user_id:
-            return user
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+def get_user(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(db_models.User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return user

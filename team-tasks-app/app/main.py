@@ -2,10 +2,15 @@
 
 from fastapi import FastAPI
 
+from app import db_models
+from app.db import Base, engine
 from app.routes import auth, users
 
 
 app = FastAPI(title="Team Tasks App")
+
+# Ensure tables exist (simple bootstrap; for prod use migrations)
+Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(users.router)
