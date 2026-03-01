@@ -21,7 +21,10 @@ def create_user(user: UserCreate, session: Session = Depends(get_session)):
     existing = session.scalar(select(db_models.User).where(db_models.User.email == user.email))
     if existing:
         raise HTTPException(status_code=400, detail="El email ya existe")
-    password_hash = hash_password(user.password)
+    try:
+        password_hash = hash_password(user.password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     db_user = db_models.User(
         name=user.name,
