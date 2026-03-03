@@ -14,8 +14,8 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(tasks.router)
 app.include_router(filters.router)
+app.include_router(tasks.router)
 
 
 if __name__ == "__main__":
