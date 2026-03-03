@@ -9,7 +9,8 @@ from app.db import get_session
 from app.models import Task
 
 
-router = APIRouter(prefix="/tasks", tags=["Filters"])
+# routes under a dedicated subpath to avoid conflicting with /tasks/{task_id}
+router = APIRouter(prefix="/tasks/filters", tags=["Filters"])
 
 
 @router.get("/search", response_model=List[Task])

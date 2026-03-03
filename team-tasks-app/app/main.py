@@ -14,6 +14,7 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(users.router)
+# include filters before tasks so /tasks/search and /tasks/filter resolve correctly
 app.include_router(filters.router)
 app.include_router(tasks.router)
 
