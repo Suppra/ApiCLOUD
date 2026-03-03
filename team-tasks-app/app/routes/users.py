@@ -51,3 +51,19 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, session: Session = Depends(get_session)):
+    """Eliminar un usuario por su ID.
+
+    Retorna 204 No Content si se borra exitosamente, o 404 si no existe.
+    """
+    user = session.get(db_models.User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # opcional: si quieres borrar tareas relacionadas, asegúrate de que la
+    # relación en el modelo tenga cascade="all, delete" o hacerlo manualmente.
+    session.delete(user)
+    session.commit()
+    return None

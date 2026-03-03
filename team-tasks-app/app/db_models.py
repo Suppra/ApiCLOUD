@@ -14,7 +14,13 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     password_hash = Column(String(255), nullable=False)
 
-    tasks = relationship("Task", back_populates="owner")
+    # when a user is deleted we want all their tasks gone as well
+    tasks = relationship(
+        "Task",
+        back_populates="owner",
+        cascade="all, delete, delete-orphan",  # remove tasks when user is removed
+        # passive_deletes=False  # ORM will issue DELETEs for children
+    )
 
 
 class Task(Base):
