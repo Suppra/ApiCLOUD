@@ -22,3 +22,29 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class TaskBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    status: str = "pendiente"
+
+
+class TaskCreate(TaskBase):
+    user_id: int
+
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+
+
+class Task(TaskBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
