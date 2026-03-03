@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app import db_models
 from app.db import Base, engine
-from app.routes import auth, users
+from app.routes import auth, filters, tasks, users
 
 
 app = FastAPI(title="Team Tasks App")
@@ -14,6 +14,8 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(tasks.router)
+app.include_router(filters.router)
 
 
 if __name__ == "__main__":
